@@ -1,0 +1,132 @@
+<view class="container">
+  <!-- Welcome dialog -->
+  <cover-view class="welcome-mask" wx:if="{{showWelcome}}">
+    <cover-view class="welcome-body">
+      <cover-view class="welcome-icon">✦</cover-view>
+      <cover-view class="welcome-title">星星之火</cover-view>
+      <cover-view class="welcome-subtitle">一起点亮世界</cover-view>
+      <cover-view class="welcome-divider"></cover-view>
+      <cover-view class="welcome-desc">地图被迷雾笼罩</cover-view>
+      <cover-view class="welcome-desc">每个人在自己的位置驱散迷雾</cover-view>
+      <cover-view class="welcome-desc">所有人的贡献汇聚在一起</cover-view>
+      <cover-view class="welcome-desc">共同点亮这个世界</cover-view>
+      <cover-view class="welcome-divider"></cover-view>
+      <cover-view class="welcome-desc">点击 ✦ 按钮驱散当前位置迷雾</cover-view>
+      <cover-view class="welcome-desc">长按地图可在任意位置认领驱散</cover-view>
+      <cover-view class="welcome-desc">仅记录驱散区域，不追踪个人行踪</cover-view>
+      <cover-view class="welcome-btn" bindtap="onWelcomeConfirm">开始探索</cover-view>
+    </cover-view>
+  </cover-view>
+
+  <map
+    id="fogMap"
+    class="map"
+    longitude="{{longitude}}"
+    latitude="{{latitude}}"
+    scale="{{scale}}"
+    circles="{{clearedCircles}}"
+    show-location="{{located}}"
+    markers="{{claimMarkers}}"
+    bindregionchange="onRegionChange"
+    bindupdated="onMapUpdated"
+    bindtouchstart="onMapTouchStart"
+    bindtouchend="onMapTouchEnd"
+    bindtouchmove="onMapTouchMove"
+  />
+
+  <canvas
+    type="2d"
+    id="fogCanvas"
+    class="fog-canvas {{fogHidden ? 'fog-hidden' : ''}}"
+  />
+
+  <canvas
+    type="2d"
+    id="starCanvas"
+    class="star-canvas {{fogHidden ? 'fog-hidden' : ''}}"
+  />
+
+  <!-- <cover-view class="map-scale-info" wx:if="{{currentScale}}">缩放: {{currentScale}}</cover-view> -->
+
+  <cover-view class="map-buttons">
+    <cover-view
+      class="map-btn btn-locate {{overviewMode ? 'btn-overview' : ''}} {{showGuide && guideStep === 0 ? 'guide-highlight' : ''}}"
+      bindtap="onMoveToLocation"
+    >◎</cover-view>
+    <cover-view
+      class="map-btn btn-clear {{clearAttempts <= 0 ? 'btn-disabled' : ''}} {{showGuide && guideStep === 1 ? 'guide-highlight' : ''}}"
+      bindtap="onClearFog"
+    >✦</cover-view>
+    <cover-view
+      class="map-btn btn-filter {{showOnlyMine ? 'btn-active' : ''}} {{showGuide && guideStep === 2 ? 'guide-highlight' : ''}}"
+      bindtap="onToggleOnlyMine"
+    >👤</cover-view>
+  </cover-view>
+
+  <view
+    class="loading"
+    wx:if="{{loading}}"
+  >
+    <text>加载中...</text>
+  </view>
+
+  <!-- Claim confirm card -->
+  <cover-view class="claim-card" wx:if="{{claimMode}}" catchtap="noop">
+    <cover-view class="claim-info">
+      <cover-view class="claim-label">认领驱散</cover-view>
+      <cover-view class="claim-place" wx:if="{{claimPlaceName}}">{{claimPlaceName}}</cover-view>
+      <cover-view class="claim-coords" wx:else>{{claimLat}}, {{claimLng}}</cover-view>
+      <cover-view class="claim-warning" wx:if="{{claimWarning}}">{{claimWarning}}</cover-view>
+      <cover-view class="claim-count">今日认领 {{claimUsed}}/{{claimLimit}}</cover-view>
+    </cover-view>
+    <cover-view class="claim-actions">
+      <cover-view class="claim-btn claim-cancel" bindtap="onClaimCancel">取消</cover-view>
+      <cover-view class="claim-btn {{claimWarning ? 'claim-btn-disabled' : 'claim-confirm'}}" bindtap="{{claimWarning ? '' : 'onClaimConfirm'}}">驱散此处</cover-view>
+    </cover-view>
+  </cover-view>
+
+  <!-- Guide overlay -->
+  <cover-view class="guide-mask" wx:if="{{showGuide}}" bindtap="nextGuideStep">
+    <cover-view class="guide-tip">
+      <cover-view class="guide-tip-text" wx:if="{{guideStep === 0}}">点击此按钮定位到当前位置</cover-view>
+      <cover-view class="guide-tip-text" wx:if="{{guideStep === 1}}">驱散当前位置 2 公里范围迷雾</cover-view>
+      <cover-view class="guide-tip-text" wx:if="{{guideStep === 2}}">切换查看自己的驱散记录</cover-view>
+      <cover-view class="guide-tip-text" wx:if="{{guideStep === 3}}">长按地图可在任意位置认领驱散</cover-view>
+      <cover-view class="guide-dots">
+        <cover-view class="guide-dot {{guideStep === 0 ? 'guide-dot-active' : ''}}"></cover-view>
+        <cover-view class="guide-dot {{guideStep === 1 ? 'guide-dot-active' : ''}}"></cover-view>
+        <cover-view class="guide-dot {{guideStep === 2 ? 'guide-dot-active' : ''}}"></cover-view>
+        <cover-view class="guide-dot {{guideStep === 3 ? 'guide-dot-active' : ''}}"></cover-view>
+      </cover-view>
+      <cover-view class="guide-btn" catchtap="nextGuideStep">
+        {{guideStep >= 3 ? '开始探索' : '下一步'}}
+      </cover-view>
+    </cover-view>
+  </cover-view>
+
+  <!-- Discovery result card -->
+  <cover-view class="result-mask" wx:if="{{showResult && result}}" bindtap="onResultClose">
+    <cover-view class="result-card" catchtap="noop">
+      <cover-view class="result-accent" style="background: {{result.rarityColor}};"></cover-view>
+      <cover-view class="result-title">发现地点</cover-view>
+      <cover-view class="result-place">{{result.placeName}}</cover-view>
+      <cover-view class="result-city" wx:if="{{result.city}}">{{result.city}}</cover-view>
+      <cover-view class="result-rarity-row">
+        <cover-view class="result-rarity" style="color: {{result.rarityColor}}; border-color: {{result.rarityColor}};">{{result.rarityName}}</cover-view>
+      </cover-view>
+      <cover-view class="result-xp">+{{result.xpGained}} XP</cover-view>
+      <cover-view class="result-first" wx:if="{{result.firstInCity}}">新城市解锁 +500</cover-view>
+      <cover-view class="result-badges" wx:if="{{result.newBadges.length}}">
+        <cover-view class="result-badge-title">获得徽章</cover-view>
+        <cover-view class="result-badge" wx:for="{{result.newBadges}}" wx:key="id">
+          <cover-view class="result-badge-icon">{{item.icon}}</cover-view>
+          <cover-view class="result-badge-text">
+            <cover-view class="result-badge-name">{{item.name}}</cover-view>
+            <cover-view class="result-badge-desc">{{item.desc}}</cover-view>
+          </cover-view>
+        </cover-view>
+      </cover-view>
+      <cover-view class="result-btn" bindtap="onResultClose">继续探索</cover-view>
+    </cover-view>
+  </cover-view>
+</view>

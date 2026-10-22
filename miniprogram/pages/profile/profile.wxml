@@ -1,0 +1,202 @@
+<view class="page">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="hero">
+    <view class="ring-outer">
+      <view class="ring-track"></view>
+      <view class="ring-fill" style="--deg: {{ringDeg}}deg;"></view>
+      <view class="ring-glow" style="--deg: {{ringDeg}}deg;"></view>
+      <view class="ring-center">
+        <text class="ring-number">{{totalCleared}}</text>
+        <text class="ring-label">已驱散</text>
+      </view>
+    </view>
+    <text class="hero-sub">这片迷雾已被你照亮</text>
+  </view>
+
+  <!-- Stats row -->
+  <view class="stats-row">
+    <view class="stat-item">
+      <text class="stat-num">{{checkInCount}}</text>
+      <text class="stat-label">累计签到</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-num">{{clearAttempts}}</text>
+      <text class="stat-label">剩余驱散</text>
+    </view>
+  </view>
+
+  <!-- Level -->
+  <view class="level-card {{levelNum >= 7 ? 'level-card-gold' : ''}}">
+    <view class="level-header">
+      <text class="level-label">探索等级</text>
+      <view class="level-name-row">
+        <text class="level-name">Lv.{{levelNum}} {{levelName}}</text>
+        <text class="level-badge-max" wx:if="{{levelNum >= 7}}">✦ 世界点亮者</text>
+      </view>
+    </view>
+    <view class="level-bar-track">
+      <view class="level-bar-fill" style="width: {{levelProgress * 100}}%;"></view>
+    </view>
+    <view class="level-footer" wx:if="{{nextLevelName}}">
+      <text class="level-next">下一级：{{nextLevelName}}</text>
+      <text class="level-xp">{{totalXp}} / {{nextLevelXp}} XP</text>
+    </view>
+    <view class="level-footer" wx:else>
+      <text class="level-next">已达最高等级</text>
+    </view>
+  </view>
+
+  <!-- Level-up modal -->
+
+  <!-- Level details collapsible -->
+  <view class="section">
+    <view class="section-title" bindtap="onToggleLevels">
+      <text>等级详情</text>
+      <text class="section-arrow {{showLevels ? 'section-arrow-open' : ''}}">></text>
+    </view>
+    <view class="level-list" wx:if="{{showLevels}}">
+      <view class="level-row {{item.current ? 'level-row-current' : ''}}" wx:for="{{allLevels}}" wx:key="lv">
+        <view class="level-row-left">
+          <text class="level-row-lv">Lv.{{item.lv}}</text>
+          <text class="level-row-name">{{item.name}}</text>
+        </view>
+        <view class="level-row-right">
+          <text class="level-row-xp">{{item.xpText}}</text>
+          <text class="level-row-unlock" wx:if="{{item.unlock}}">{{item.unlock}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  <view class="levelup-mask" wx:if="{{showLevelUp}}" bindtap="onCloseLevelUp">
+    <view class="levelup-card">
+      <view class="levelup-icon">✦</view>
+      <view class="levelup-title">等级提升</view>
+      <view class="levelup-level">Lv.{{levelUpTo.level}} {{levelUpTo.name}}</view>
+      <view class="levelup-unlock" wx:if="{{levelUpTo.unlock}}">
+        解锁：{{levelUpTo.unlock}}
+      </view>
+      <view class="levelup-btn">继续探索</view>
+    </view>
+  </view>
+
+  <!-- Profile modal -->
+  <view class="modal-mask" wx:if="{{showProfileModal}}" bindtap="onCloseProfileModal">
+    <view class="modal-body" catchtap="noop">
+      <text class="modal-title">{{nickName ? '编辑个人信息' : '设置探索者资料'}}</text>
+      <text class="modal-desc">头像和昵称仅用于排行榜展示</text>
+      <view class="modal-avatar-row">
+        <view class="modal-avatar-btn" bindtap="onChooseAvatar">
+          <image
+            wx:if="{{avatarUrl}}"
+            class="modal-avatar"
+            src="{{avatarUrl}}"
+            mode="aspectFill"
+          />
+          <view wx:else class="modal-avatar-placeholder">
+            <text class="modal-avatar-plus">+</text>
+          </view>
+        </view>
+        <text class="modal-avatar-hint">上传头像</text>
+      </view>
+      <view class="modal-field">
+        <text class="modal-field-label">昵称</text>
+        <input
+          class="modal-input"
+          type="text"
+          maxlength="12"
+          placeholder="点击输入昵称"
+          placeholder-style="color: rgba(255,255,255,0.2);"
+          value="{{nickInput}}"
+          bindinput="onNickInput"
+        />
+      </view>
+      <view class="modal-actions">
+        <button class="modal-btn modal-cancel" bindtap="onCloseProfileModal">取消</button>
+        <button class="modal-btn modal-confirm" disabled="{{!nickInput || saving}}" bindtap="onSaveProfile">{{saving ? '保存中...' : '确定'}}</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="checkin-panel">
+    <view>
+      <text class="checkin-title">每日签到</text>
+      <text class="checkin-sub">累计签到 2 次获得 1 次驱散机会（{{checkInProgress}}/2）</text>
+    </view>
+    <button
+      class="checkin-button"
+      disabled="{{hasCheckedIn}}"
+      bindtap="onCheckIn"
+    >{{hasCheckedIn ? '已签到' : '签到'}}</button>
+  </view>
+
+  <view class="section">
+    <view class="section-title" bindtap="onToggleBadges">
+      <text>徽章墙</text>
+      <text class="section-arrow {{showBadges ? 'section-arrow-open' : ''}}">></text>
+    </view>
+    <view class="badge-grid" wx:if="{{showBadges}}">
+      <view class="badge-cell {{item.earned ? 'badge-earned' : 'badge-locked'}}" wx:for="{{badgeList}}" wx:key="id">
+        <view class="badge-icon">{{item.icon}}</view>
+        <text class="badge-name">{{item.name}}</text>
+        <text class="badge-desc">{{item.desc}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">个人信息</view>
+    <view class="info-row profile-row" bindtap="onEditProfile">
+      <view class="profile-left">
+        <image
+          wx:if="{{avatarUrl}}"
+          class="profile-avatar"
+          src="{{avatarUrl}}"
+          mode="aspectFill"
+        />
+        <view wx:else class="profile-avatar-empty"></view>
+        <text class="profile-name">{{nickName || '未设置'}}</text>
+      </view>
+      <text class="profile-arrow">></text>
+    </view>
+    <view class="info-row" bindtap="onOpenDiscovery">
+      <text class="profile-name">我的图鉴</text>
+      <text class="profile-arrow">></text>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">探索记录</view>
+    <view class="info-row">
+      <text class="info-key">驱散面积</text>
+      <text class="info-val">{{areaDetail}} km²</text>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">驱散说明</view>
+    <view class="rule-card">
+      <view class="rule-item">
+        <view class="rule-dot"></view>
+        <text class="rule-text">点击 ✦ 按钮驱散当前位置 2 公里范围迷雾</text>
+      </view>
+      <view class="rule-item">
+        <view class="rule-dot"></view>
+        <text class="rule-text">长按地图可在任意位置认领驱散（Lv.2 解锁）</text>
+      </view>
+      <view class="rule-item">
+        <view class="rule-dot"></view>
+        <text class="rule-text">签到 2 次获得 1 次驱散机会，认领次数随等级提升</text>
+      </view>
+      <view class="rule-item">
+        <view class="rule-dot"></view>
+        <text class="rule-text">已驱散区域 3 公里内不可重复驱散</text>
+      </view>
+      <view class="rule-item">
+        <view class="rule-dot"></view>
+        <text class="rule-text">驱散效果全局共享，所有探索者都可见</text>
+      </view>
+    </view>
+  </view>
+</view>

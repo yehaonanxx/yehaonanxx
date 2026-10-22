@@ -1,0 +1,69 @@
+<view class="page">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="header">
+    <view class="back-btn" bindtap="onBack">
+      <text class="back-arrow">‹</text>
+    </view>
+    <text class="title">我的图鉴</text>
+    <text class="subtitle" wx:if="{{totalCount > 0}}">已发现 {{totalCount}} 个地点</text>
+  </view>
+
+  <!-- Summary -->
+  <view class="summary-row" wx:if="{{!loading && summary.total > 0}}">
+    <view class="summary-item">
+      <text class="summary-num">{{summary.total}}</text>
+      <text class="summary-label">发现</text>
+    </view>
+    <view class="summary-item">
+      <text class="summary-num">{{summary.rareCount}}</text>
+      <text class="summary-label">珍稀以上</text>
+    </view>
+    <view class="summary-item">
+      <text class="summary-num">{{summary.epicCount}}</text>
+      <text class="summary-label">史诗</text>
+    </view>
+    <view class="summary-item">
+      <text class="summary-num">{{summary.cityCount}}</text>
+      <text class="summary-label">城市</text>
+    </view>
+  </view>
+
+  <view class="rarity-legend" wx:if="{{!loading && rarityLegend.length}}">
+    <view class="legend-item" wx:for="{{rarityLegend}}" wx:key="key">
+      <view class="legend-dot" style="background: {{item.color}};"></view>
+      <text class="legend-text">{{item.name}}</text>
+    </view>
+  </view>
+
+  <!-- Loading -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- Empty state -->
+  <view class="empty-state" wx:if="{{!loading && cities.length === 0}}">
+    <text class="empty-icon">✦</text>
+    <text class="empty-text">暂无发现</text>
+    <text class="empty-sub">驱散迷雾即可收集地点，稀有地点给更多 XP</text>
+  </view>
+
+  <!-- City list -->
+  <scroll-view class="scroll-area" scroll-y wx:if="{{!loading && cities.length > 0}}">
+    <view class="city-section" wx:for="{{cities}}" wx:key="name">
+      <view class="city-header">
+        <text class="city-name">{{item.name}}</text>
+        <text class="city-count">{{item.count}} 个地点</text>
+      </view>
+      <view class="place-list">
+        <view class="place-item" wx:for="{{item.places}}" wx:for-item="place" wx:key="placeName">
+          <view class="place-dot" style="background: {{place.rarityColor}};"></view>
+          <text class="place-name">{{place.placeName}}</text>
+          <text class="place-rarity" style="color: {{place.rarityColor}};">{{place.rarityName}}</text>
+          <text class="place-date">{{place.date}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="bottom-space"></view>
+  </scroll-view>
+</view>

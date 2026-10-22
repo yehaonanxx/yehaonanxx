@@ -1,0 +1,55 @@
+{
+  "pages": [
+    "pages/fogmap/fogmap",
+    "pages/leaderboard/leaderboard",
+    "pages/profile/profile",
+    "pages/discovery/discovery",
+    "pages/index/index",
+    "pages/example/index"
+  ],
+  "window": {
+    "backgroundColor": "#10131c",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#10131c",
+    "navigationBarTitleText": "迷雾地图",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "color": "rgba(255,255,255,0.35)",
+    "selectedColor": "#38bdf8",
+    "backgroundColor": "#10131c",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/fogmap/fogmap",
+        "text": "地图",
+        "iconPath": "images/icons/home.png",
+        "selectedIconPath": "images/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/leaderboard/leaderboard",
+        "text": "排行",
+        "iconPath": "images/icons/goods.png",
+        "selectedIconPath": "images/icons/goods-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/icons/usercenter.png",
+        "selectedIconPath": "images/icons/usercenter-active.png"
+      }
+    ]
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于在地图上显示你的位置并驱散迷雾"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "__usePrivacyCheck__": true
+}

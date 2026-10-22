@@ -1,0 +1,249 @@
+<view class="page">
+  <view class="status-bar" style="height: {{statusBarHeight}}px;"></view>
+
+  <view class="header">
+    <text class="title">排行榜</text>
+  </view>
+
+  <!-- Tabs -->
+  <view class="tabs">
+    <view
+      class="tab {{activeTab === 'user' ? 'tab-active' : ''}}"
+      data-tab="user"
+      bindtap="onSwitchTab"
+    >个人排行</view>
+    <view
+      class="tab {{activeTab === 'region' ? 'tab-active' : ''}}"
+      data-tab="region"
+      bindtap="onSwitchTab"
+    >区域排行</view>
+  </view>
+
+  <!-- Loading -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <block wx:if="{{!loading}}">
+
+  <!-- User leaderboard -->
+  <block wx:if="{{activeTab === 'user'}}">
+    <!-- Empty state -->
+    <view class="empty-state" wx:if="{{ranked.length === 0}}">
+      <text class="empty-icon">☁</text>
+      <text class="empty-text">暂无探索者</text>
+      <text class="empty-sub">成为第一个驱散迷雾的人</text>
+    </view>
+
+    <!-- Podium top 3 (fixed) -->
+    <view class="podium" wx:if="{{ranked.length >= 1}}">
+      <!-- 2nd -->
+      <view class="podium-item podium-2" wx:if="{{ranked.length >= 2}}">
+        <view class="podium-avatar-wrap {{ranked[1].isMaxLevel ? 'avatar-gold' : ''}}">
+          <view class="podium-rank-badge">2</view>
+          <image
+            wx:if="{{ranked[1].avatarUrl}}"
+            class="podium-avatar"
+            src="{{ranked[1].avatarUrl}}"
+            mode="aspectFill"
+          />
+          <view wx:else class="podium-avatar-empty"></view>
+        </view>
+        <text class="podium-name {{ranked[1].isMaxLevel ? 'name-gold' : ''}}">{{ranked[1].nickName || '未知用户'}}</text>
+        <text class="badge-max" wx:if="{{ranked[1].isMaxLevel}}">世界点亮者</text>
+        <view class="podium-bar podium-bar-2">
+          <text class="podium-bar-num">{{ranked[1].areaDisplay}} km²</text>
+        </view>
+      </view>
+
+      <!-- 1st -->
+      <view class="podium-item podium-1">
+        <text class="podium-crown">♔</text>
+        <view class="podium-avatar-wrap podium-avatar-wrap-1 {{ranked[0].isMaxLevel ? 'avatar-gold' : ''}}">
+          <view class="podium-rank-badge rank-1">1</view>
+          <image
+            wx:if="{{ranked[0].avatarUrl}}"
+            class="podium-avatar podium-avatar-1"
+            src="{{ranked[0].avatarUrl}}"
+            mode="aspectFill"
+          />
+          <view wx:else class="podium-avatar-empty podium-avatar-1"></view>
+        </view>
+        <text class="podium-name {{ranked[0].isMaxLevel ? 'name-gold' : ''}}">{{ranked[0].nickName || '未知用户'}}</text>
+        <text class="badge-max" wx:if="{{ranked[0].isMaxLevel}}">世界点亮者</text>
+        <view class="podium-bar podium-bar-1">
+          <text class="podium-bar-num">{{ranked[0].areaDisplay}} km²</text>
+        </view>
+      </view>
+
+      <!-- 3rd -->
+      <view class="podium-item podium-3" wx:if="{{ranked.length >= 3}}">
+        <view class="podium-avatar-wrap {{ranked[2].isMaxLevel ? 'avatar-gold' : ''}}">
+          <view class="podium-rank-badge">3</view>
+          <image
+            wx:if="{{ranked[2].avatarUrl}}"
+            class="podium-avatar"
+            src="{{ranked[2].avatarUrl}}"
+            mode="aspectFill"
+          />
+          <view wx:else class="podium-avatar-empty"></view>
+        </view>
+        <text class="podium-name {{ranked[2].isMaxLevel ? 'name-gold' : ''}}">{{ranked[2].nickName || '未知用户'}}</text>
+        <text class="badge-max" wx:if="{{ranked[2].isMaxLevel}}">世界点亮者</text>
+        <view class="podium-bar podium-bar-3">
+          <text class="podium-bar-num">{{ranked[2].areaDisplay}} km²</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Scrollable list (4-20) -->
+    <scroll-view class="scroll-area" scroll-y wx:if="{{restList.length > 0}}">
+      <view class="list">
+        <view class="list-item" wx:for="{{restList}}" wx:key="userId">
+          <view class="list-rank">
+            <text class="list-rank-num">{{item.rank}}</text>
+          </view>
+          <view class="{{item.isMaxLevel ? 'list-avatar-gold-wrap' : ''}}">
+            <image
+              wx:if="{{item.avatarUrl}}"
+              class="list-avatar"
+              src="{{item.avatarUrl}}"
+              mode="aspectFill"
+            />
+            <view wx:else class="list-avatar-empty"></view>
+          </view>
+          <view class="list-info">
+            <text class="list-name {{item.isMaxLevel ? 'name-gold' : ''}}">{{item.nickName || '未知用户'}}</text>
+            <text class="badge-max badge-max-sm" wx:if="{{item.isMaxLevel}}">世界点亮者</text>
+            <text class="list-sub" wx:else>{{item.totalCleared}} 次</text>
+          </view>
+          <view class="list-area-wrap">
+            <text class="list-area-num">{{item.areaDisplay}}</text>
+            <text class="list-area-unit">km²</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- Empty list hint -->
+    <view class="list-empty" wx:if="{{restList.length === 0 && ranked.length > 0}}">
+      <text class="list-empty-text">暂无更多探索者</text>
+    </view>
+
+    <!-- My rank (always at bottom) -->
+    <view class="my-card" wx:if="{{me && me.nickName}}">
+      <view class="list-rank my-rank">
+        <text class="list-rank-num">{{me.rank <= 20 ? me.rank : '-'}}</text>
+      </view>
+      <view class="{{me.isMaxLevel ? 'list-avatar-gold-wrap' : ''}}">
+        <image
+          wx:if="{{me.avatarUrl}}"
+          class="list-avatar"
+          src="{{me.avatarUrl}}"
+          mode="aspectFill"
+        />
+        <view wx:else class="list-avatar-empty"></view>
+      </view>
+      <view class="list-info">
+        <text class="list-name {{me.isMaxLevel ? 'name-gold' : ''}}">{{me.nickName}}</text>
+        <text class="badge-max badge-max-sm" wx:if="{{me.isMaxLevel}}">世界点亮者</text>
+        <text class="list-sub" wx:else>{{me.rank <= 20 ? me.totalCleared + ' 次' : '未上榜'}}</text>
+      </view>
+      <view class="list-area-wrap">
+        <text class="list-area-num">{{me.areaDisplay}}</text>
+        <text class="list-area-unit">km²</text>
+      </view>
+    </view>
+
+    <!-- Guide to set nickname -->
+    <view class="my-card my-card-guide" wx:if="{{me && !me.nickName}}" bindtap="onShowProfileModal">
+      <text class="my-guide-text">查看我的排行</text>
+      <text class="my-guide-arrow">></text>
+    </view>
+
+    <!-- No data hint at bottom -->
+    <view class="list-empty" wx:if="{{!me && ranked.length === 0}}">
+      <text class="list-empty-text">成为第一个探索者吧</text>
+    </view>
+  </block>
+
+  <!-- Region leaderboard -->
+  <block wx:if="{{activeTab === 'region'}}">
+    <view class="region-tabs">
+      <view
+        class="region-tab {{regionLevel === 'province' ? 'region-tab-active' : ''}}"
+        data-level="province"
+        bindtap="onSwitchRegionLevel"
+      >按省</view>
+      <view
+        class="region-tab {{regionLevel === 'city' ? 'region-tab-active' : ''}}"
+        data-level="city"
+        bindtap="onSwitchRegionLevel"
+      >按市</view>
+    </view>
+
+    <view class="empty-state" wx:if="{{regionList.length === 0}}">
+      <text class="empty-icon">☁</text>
+      <text class="empty-text">暂无区域数据</text>
+      <text class="empty-sub">成为第一个驱散迷雾的人</text>
+    </view>
+
+    <scroll-view class="scroll-area" scroll-y wx:if="{{regionList.length > 0}}">
+      <view class="list">
+        <view class="list-item region-item" wx:for="{{regionList}}" wx:key="name">
+          <view class="list-rank {{item.rank <= 3 ? 'rank-' + item.rank : ''}}">
+            <text class="list-rank-num">{{item.rank}}</text>
+          </view>
+          <view class="list-info">
+            <text class="list-name">{{item.name}}</text>
+            <text class="list-sub">{{item.userCount}} 人参与</text>
+          </view>
+          <view class="list-area-wrap">
+            <text class="list-area-num">{{item.totalCount}}</text>
+            <text class="list-area-unit">次</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </block>
+
+  </block>
+
+  <!-- Profile modal -->
+  <view class="modal-mask" wx:if="{{showProfileModal}}" bindtap="onCloseProfileModal">
+    <view class="modal-body" catchtap="noop">
+      <text class="modal-title">设置探索者资料</text>
+      <text class="modal-desc">头像和昵称用于排行榜展示</text>
+      <view class="modal-avatar-row">
+        <view class="modal-avatar-btn" bindtap="onChooseAvatar">
+          <image
+            wx:if="{{avatarUrl}}"
+            class="modal-avatar"
+            src="{{avatarUrl}}"
+            mode="aspectFill"
+          />
+          <view wx:else class="modal-avatar-placeholder">
+            <text class="modal-avatar-plus">+</text>
+          </view>
+        </view>
+        <text class="modal-avatar-hint">上传头像</text>
+      </view>
+      <view class="modal-field">
+        <text class="modal-field-label">昵称</text>
+        <input
+          class="modal-input"
+          type="text"
+          maxlength="12"
+          placeholder="点击输入昵称"
+          placeholder-style="color: rgba(255,255,255,0.2);"
+          value="{{nickInput}}"
+          bindinput="onNickInput"
+        />
+      </view>
+      <view class="modal-actions">
+        <button class="modal-btn modal-cancel" bindtap="onCloseProfileModal">取消</button>
+        <button class="modal-btn modal-confirm" disabled="{{!nickInput || saving}}" bindtap="onSaveProfile">{{saving ? '保存中...' : '确定'}}</button>
+      </view>
+    </view>
+  </view>
+</view>
